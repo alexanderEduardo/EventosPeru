@@ -1,18 +1,25 @@
 package com.alex.spring.security.demo.services;
 
-import com.alex.spring.security.demo.controllers.dto.AuthCreateUserRequest;
 import com.alex.spring.security.demo.controllers.dto.AuthLoginRequest;
+import com.alex.spring.security.demo.controllers.dto.AuthRegisterRequest;
+import com.alex.spring.security.demo.controllers.dto.AuthRegisterResponse;
 import com.alex.spring.security.demo.controllers.dto.AuthResponse;
+import com.alex.spring.security.demo.persistence.entity.Cliente;
 import com.alex.spring.security.demo.persistence.entity.RoleEntity;
+import com.alex.spring.security.demo.persistence.entity.RoleEnum;
 import com.alex.spring.security.demo.persistence.entity.UserEntity;
 import com.alex.spring.security.demo.repository.RoleRepository;
 import com.alex.spring.security.demo.repository.UserRepository;
 import com.alex.spring.security.demo.util.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.context.annotation.Primary;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,10 +28,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @Primary
@@ -34,49 +41,90 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     final RoleRepository roleRepository;
     final JwtUtil jwtUtil;
     final PasswordEncoder passwordEncoder;
+    final IUserService userService;
 
-    public UserDetailsServiceImpl(UserRepository userRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, RoleRepository roleRepository) {
+    public UserDetailsServiceImpl(UserRepository userRepository, RoleRepository roleRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder,IUserService userService) {
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
+        this.userService = userService;
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserEntity userEntity = userRepository.findUserEntityByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("El usuario " + username + " no existe"));
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        UserEntity userEntity = userService.findUserByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("El usuario con el correo " + email + " no existe"));
 
-        List<SimpleGrantedAuthority> authorities = getSimpleGrantedAuthorities(userEntity);
+        List<SimpleGrantedAuthority> authorities = userEntity.getRoleEntitySet().stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRoleEnum().name()))
+                .collect(Collectors.toList());
 
         return new User(userEntity.getUsername(),
                 userEntity.getPassword(),
-                userEntity.isEnabled(),
-                userEntity.isAccountNoExpired(),
-                userEntity.isCredentialNoExpired(),
-                userEntity.isAccountNoLocked(),
+                userEntity.getIsEnabled(),
+                userEntity.getAccountNoExpired(),
+                userEntity.getCredentialNoExpired(),
+                userEntity.getAccountNoLocked(),
                 authorities);
     }
 
-    private static List<SimpleGrantedAuthority> getSimpleGrantedAuthorities(UserEntity userEntity) {
-        return userEntity.getRoleEntitySet().stream()
-                .flatMap(role -> Stream.concat(
-                        Stream.of(new SimpleGrantedAuthority("ROLE_" + role.getRoleEnum().name())),
-                        role.getPermissionEntities().stream().map(permission -> new SimpleGrantedAuthority(permission.getName()))
-                ))
-                .collect(Collectors.toList());
-    }
-
-    public AuthResponse loginUser(AuthLoginRequest authLoginRequest){
-        String username = authLoginRequest.username();
+    public AuthResponse loginUser(AuthLoginRequest authLoginRequest, HttpServletRequest request, AuthenticationManager authenticationManager){
+        String email = authLoginRequest.email();
         String password = authLoginRequest.password();
 
-        Authentication authentication = this.authenticate(username, password);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        //Authentication authentication = this.authenticate(username, password);
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+        securityContext.setAuthentication(authentication);
+        // También puedes asociar la sesión con el contexto de seguridad
+        HttpSession session = request.getSession(true);
+        session.setAttribute("SPRING_SECURITY_CONTEXT", securityContext);
 
         String accessToken = jwtUtil.createToken(authentication);
-        AuthResponse authResponse = new AuthResponse(username, "User logged successfully", accessToken, true);
+        AuthResponse authResponse = new AuthResponse(email, "User logged successfully", accessToken, true);
         return authResponse;
+    }
+
+    public AuthRegisterResponse registerUserAsClient(AuthRegisterRequest userRequest){
+        //crear un registro en la tabla usuario y la tabla clientes
+        String name = userRequest.name();
+        String address = userRequest.address();
+        String email = userRequest.email();
+        String password = userRequest.password();
+        String lastname = userRequest.lastname();
+        String phone = userRequest.phone();
+        Boolean accountNoLocked = userRequest.isAccountNoLocked();
+        Boolean enabled = userRequest.isEnabled();
+        Boolean accountNoExpired = userRequest.isAccountNoExpired();
+        Boolean credentialNoExpired = userRequest.isCredentialNoExpired();
+
+        List<RoleEnum> rolesInit = List.of(RoleEnum.USER, RoleEnum.CLIENTE);
+        List<RoleEntity> rolesList = userService.findRolesByRoleEnumList(rolesInit);
+        Set<RoleEntity> rolesDb = new HashSet<>(rolesList);
+        String encodedPassword = passwordEncoder.encode(password);
+
+        UserEntity userEntity = UserEntity.builder()
+                .username(name)
+                .password(encodedPassword)
+                .roleEntitySet(rolesDb)
+                .isEnabled(enabled)
+                .accountNoExpired(credentialNoExpired)
+                .accountNoLocked(accountNoLocked)
+                .credentialNoExpired(accountNoExpired)
+                .email(email)
+                .build();
+
+        Cliente cliente = Cliente.builder()
+                .telefono(phone)
+                .direccion(address)
+                .apellido(lastname)
+                .build();
+
+        userService.createUserAndClient(userEntity, cliente);
+
+        return new AuthRegisterResponse(name,"El usuario de tipo cliente ha sido creado exitosamente",true);
     }
 
     private Authentication authenticate(String username, String password) {
@@ -90,31 +138,5 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
         new UsernamePasswordAuthenticationToken(username, password);
         return new UsernamePasswordAuthenticationToken(username, password, userDetails.getAuthorities());
-    }
-
-    public AuthResponse createUser(AuthCreateUserRequest userRequest) {
-        String username = userRequest.username();
-        String password = userRequest.password();
-        List<String> rolList = userRequest.roleRequest().roleListName();
-        Set<RoleEntity> rolesDb = (Set<RoleEntity>) roleRepository.findRoleEntitiesByRoleEnumIn(rolList);
-        if(rolesDb.isEmpty()){
-            throw new IllegalArgumentException("The roles specified do not exist");
-        }
-
-        UserEntity userEntity = UserEntity.builder()
-                .username(username)
-                .password(password)
-                .roleEntitySet(rolesDb)
-                .isEnabled(true)
-                .accountNoExpired(true)
-                .accountNoLocked(true)
-                .credentialNoExpired(true)
-                .build();
-
-        UserEntity userCreated = userRepository.save(userEntity);
-        List<SimpleGrantedAuthority> authorities = getSimpleGrantedAuthorities(userCreated);
-        Authentication authenticationToken = new UsernamePasswordAuthenticationToken(username, password, authorities);
-        String accessToken = jwtUtil.createToken(authenticationToken);
-        return new AuthResponse(userCreated.getUsername(),"User created successfully", accessToken,true);
     }
 }

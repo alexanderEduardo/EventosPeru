@@ -1,10 +1,10 @@
 package com.alex.spring.security.demo;
 
-import com.alex.spring.security.demo.persistence.entity.PermissionEntity;
-import com.alex.spring.security.demo.persistence.entity.RoleEntity;
-import com.alex.spring.security.demo.persistence.entity.RoleEnum;
-import com.alex.spring.security.demo.persistence.entity.UserEntity;
+import ch.qos.logback.core.net.server.Client;
+import com.alex.spring.security.demo.persistence.entity.*;
+import com.alex.spring.security.demo.repository.EspecialidadRepository;
 import com.alex.spring.security.demo.repository.UserRepository;
+import com.alex.spring.security.demo.services.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -12,100 +12,123 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
 @SpringBootApplication
 public class SpringSecurityDemoApplication {
 
-	public SpringSecurityDemoApplication(UserRepository repository, PasswordEncoder passwordEncoder) {
-		this.repository = repository;
-		this.passwordEncoder = passwordEncoder;
-	}
+    public SpringSecurityDemoApplication(IUserService userService, PasswordEncoder passwordEncoder) {
+        this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
+    }
 
-	public static void main(String[] args) {
-		SpringApplication.run(SpringSecurityDemoApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(SpringSecurityDemoApplication.class, args);
+    }
 
-	final UserRepository repository;
-	final PasswordEncoder passwordEncoder;
+    final IUserService userService;
+    final PasswordEncoder passwordEncoder;
 
-	@Bean
-	CommandLineRunner init(UserRepository userRepository){
-		return args -> {
-			PermissionEntity createPermission = PermissionEntity.builder()
-					.name("CREATE")
-					.build();
-			PermissionEntity readPermission = PermissionEntity.builder()
-					.name("READ")
-					.build();
-			PermissionEntity updatePermission = PermissionEntity.builder()
-					.name("UPDATE")
-					.build();
-			PermissionEntity deletePermission = PermissionEntity.builder()
-					.name("DELETE")
-					.build();
+    @Autowired
+    EspecialidadRepository especialidadRepository;
 
-			RoleEntity roleAdmin = RoleEntity.builder()
-					.roleEnum(RoleEnum.ADMIN)
-					.permissionEntities(Set.of(createPermission,readPermission,updatePermission,deletePermission))
-					.build();
-			RoleEntity roleDev = RoleEntity.builder()
-					.roleEnum(RoleEnum.DEV)
-					.permissionEntities(Set.of(createPermission,readPermission,updatePermission))
-					.build();
-			RoleEntity roleUser = RoleEntity.builder()
-					.roleEnum(RoleEnum.USER)
-					.permissionEntities(Set.of(createPermission,readPermission))
-					.build();
-			RoleEntity roleInvited = RoleEntity.builder()
-					.roleEnum(RoleEnum.INVITED)
-					.permissionEntities(Set.of(readPermission))
-					.build();
+    @Bean
+    CommandLineRunner init(UserRepository userRepository) {
+        return args -> {
 
-			String passwordEncripted = passwordEncoder.encode("1234");
-			UserEntity admin = UserEntity.builder()
-					.username("admin")
-					.password(passwordEncoder.encode("1234"))
-					.accountNoExpired(true)
-					.accountNoLocked(true)
-					.credentialNoExpired(true)
-					.isEnabled(true)
-					.roleEntitySet(Set.of(roleAdmin))
-					.build();
+            RoleEntity roleAdmin = RoleEntity.builder()
+                    .roleEnum(RoleEnum.ADMIN)
+                    .build();
+            RoleEntity roleProveedor = RoleEntity.builder()
+                    .roleEnum(RoleEnum.PROVEEDOR)
+                    .build();
+            RoleEntity roleUser = RoleEntity.builder()
+                    .roleEnum(RoleEnum.USER)
+                    .build();
+            RoleEntity roleCliente = RoleEntity.builder()
+                    .roleEnum(RoleEnum.CLIENTE)
+                    .build();
 
-			UserEntity alex = UserEntity.builder()
-					.username("alex")
-					.password(passwordEncoder.encode("1234"))
-					.accountNoExpired(true)
-					.accountNoLocked(true)
-					.credentialNoExpired(true)
-					.isEnabled(false)
-					.roleEntitySet(Set.of(roleDev))
-					.build();
+            Especialidad especialidadMatrimonio = Especialidad.builder()
+                    .nombre("Matrimonio")
+                    .build();
+            Especialidad especialidadCumpleaños = Especialidad.builder()
+                    .nombre("Cumpleaños")
+                    .build();
+            Especialidad especialidadBabyShower = Especialidad.builder()
+                    .nombre("Baby Shower")
+                    .build();
+            List<Especialidad> especialidades = Arrays.asList(especialidadMatrimonio, especialidadCumpleaños, especialidadBabyShower);
+            especialidadRepository.saveAll(especialidades);
 
-			UserEntity pepe = UserEntity.builder()
-					.username("pepe")
-					.password(passwordEncoder.encode("1234"))
-					.accountNoExpired(true)
-					.accountNoLocked(true)
-					.credentialNoExpired(true)
-					.isEnabled(true)
-					.roleEntitySet(Set.of(roleUser))
-					.build();
+            String passwordEncripted = passwordEncoder.encode("1234");
+            UserEntity admin = UserEntity.builder()
+                    .username("admin")
+                    .password(passwordEncoder.encode("1234"))
+                    .accountNoExpired(true)
+                    .accountNoLocked(true)
+                    .credentialNoExpired(true)
+                    .isEnabled(true)
+                    .roleEntitySet(Set.of(roleAdmin))
+                    .email("admin@gmail.com")
+                    .build();
 
-			UserEntity jonas = UserEntity.builder()
-					.username("jonas")
-					.password(passwordEncoder.encode("1234"))
-					.accountNoExpired(true)
-					.accountNoLocked(true)
-					.credentialNoExpired(true)
-					.isEnabled(true)
-					.roleEntitySet(Set.of(roleInvited))
-					.build();
+            UserEntity alex = UserEntity.builder()
+                    .username("alex")
+                    .password(passwordEncoder.encode("1234"))
+                    .accountNoExpired(true)
+                    .accountNoLocked(true)
+                    .credentialNoExpired(true)
+                    .isEnabled(false)
+                    .roleEntitySet(Set.of(roleCliente))
+                    .email("alex@gmail.com")
+                    .build();
 
-			repository.saveAll(List.of(admin,alex,pepe,jonas));
-		};
-	}
+            UserEntity pepe = UserEntity.builder()
+                    .username("pepe")
+                    .password(passwordEncoder.encode("1234"))
+                    .accountNoExpired(true)
+                    .accountNoLocked(true)
+                    .credentialNoExpired(true)
+                    .isEnabled(true)
+                    .roleEntitySet(Set.of(roleUser))
+                    .email("pepe@gmail.com")
+                    .build();
+
+            UserEntity jonas = UserEntity.builder()
+                    .username("jonas")
+                    .password(passwordEncoder.encode("1234"))
+                    .accountNoExpired(true)
+                    .accountNoLocked(true)
+                    .credentialNoExpired(true)
+                    .isEnabled(true)
+                    .roleEntitySet(Set.of(roleProveedor))
+                    .email("jonas@gmail.com")
+                    .build();
+
+            List<UserEntity> userEntities = userService.saveAllUsers(List.of(admin, alex, pepe, jonas));
+            userEntities.forEach(user -> {
+                if (user.getRoleEntitySet().contains(roleCliente)) {
+                    Cliente cliente = Cliente.builder()
+                            .apellido("Peña")
+                            .direccion("Av. Lima")
+                            .telefono("999299229")
+                            .usuario(user)
+                            .build();
+                    userService.saveCliente(cliente);
+                }
+                if (user.getRoleEntitySet().contains(roleProveedor)) {
+                    Proveedor proveedor = Proveedor.builder()
+                            .calificacion(1F)
+                            .especialidad(especialidadMatrimonio)
+                            .usuario(user)
+                            .build();
+                    userService.saveProveedor(proveedor);
+                }
+            });
+        };
+    }
 
 }

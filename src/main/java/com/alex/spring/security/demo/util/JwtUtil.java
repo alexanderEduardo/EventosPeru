@@ -11,6 +11,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -36,8 +37,7 @@ public class JwtUtil {
 
     public String createToken(Authentication authentication){
         try {
-            String username = authentication.getPrincipal().toString();
-
+            String username = ((User)authentication.getPrincipal()).getUsername();
             String authorities = authentication.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.joining(","));

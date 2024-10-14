@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout/layout :: head"></head>
+<body>
+<header th:replace="layout/layout :: header"></header>
+<div class="container py-4">
+
+    <div class="card bg-dark text-white">
+        <div class="card-header" th:text="${titulo}"></div>
+        <div class="card-body">
+
+            <div th:object="${proveedor}" th:remove="tag">
+                <ul th:if="${#fields.hasErrors('*')}" class="alert alert-danger"
+                    role="alert">
+                    <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
+                </ul>
+            </div>
+
+            <form th:action="@{/admin/form/proveedores}" th:object="${proveedor}" method="post"
+                  enctype="multipart/form-data">
+                <div class="form-group row">
+                    <label for="name" class="col-sm-2 col-form-label">Nombre</label>
+                    <div class="col-sm-6">
+                        <input type="text" th:field="*{usuario.username}" class="form-control" id="name"
+                               th:errorclass="'form-control alert-danger'" /> <small
+                            class="form-text text-danger"
+                            th:if="${#fields.hasErrors('usuario.username')}" th:errors="*{usuario.username}"></small>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="lastname" class="col-sm-2 col-form-label">Calificacion</label>
+                    <div class="col-sm-6">
+                        <input type="number" th:field="*{calificacion}" class="form-control" id="lastname"
+                               th:errorclass="'form-control alert-danger'" /> <small
+                            class="form-text text-danger"
+                            th:if="${#fields.hasErrors('calificacion')}" th:errors="*{calificacion}"></small>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="email" class="col-sm-2 col-form-label">Email</label>
+                    <div class="col-sm-6">
+                        <input type="text" th:field="*{usuario.email}" class="form-control" id="email"
+                               th:errorclass="'form-control alert-danger'" /> <small
+                            class="form-text text-danger"
+                            th:if="${#fields.hasErrors('usuario.email')}" th:errors="*{usuario.email}"></small>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="password" class="col-sm-2 col-form-label">Password</label>
+                    <div class="col-sm-6">
+                        <input type="password" th:field="*{usuario.password}" class="form-control" id="password"
+                               th:errorclass="'form-control alert-danger'" /> <small
+                            class="form-text text-danger"
+                            th:if="${#fields.hasErrors('usuario.password')}" th:errors="*{usuario.password}"></small>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="enabled" class="col-sm-2 col-form-label">¿Habilitado?</label>
+                    <div class="col-sm-6">
+                        <select th:field="*{usuario.isEnabled}" class="form-control" id="enabled" th:errorclass="'form-control alert-danger'">
+                            <option value=""  selected>Seleccione una opción</option>
+                            <option value="true">Sí</option>
+                            <option value="false">No</option>
+                        </select>
+                        <small class="form-text text-danger" th:if="${#fields.hasErrors('usuario.isEnabled')}" th:errors="*{usuario.isEnabled}"></small>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="especialidad" class="col-sm-2 col-form-label">Especialidad</label>
+                    <div class="col-sm-6">
+                        <select th:field="*{especialidad}" class="form-control" id="especialidad" th:errorclass="'form-control alert-danger'">
+                            <option value="" selected>Seleccione una especialidad</option>
+                            <option th:each="espe : ${especialidades}"
+                                    th:value="${espe.id}"
+                                    th:text="${espe.nombre}">
+                            </option>
+                        </select>
+                        <small class="form-text text-danger" th:if="${#fields.hasErrors('especialidad')}" th:errors="*{especialidad}"></small>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-6">
+                        <input type="submit" th:value="${titulo}" class="btn btn-secondary" />
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="layout/layout :: footer"></footer>
+</body>
+</html>

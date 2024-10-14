@@ -1,8 +1,8 @@
 package com.alex.spring.security.demo.persistence.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
-
 import java.io.Serializable;
 
 @Setter
@@ -11,14 +11,13 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name= "roles")
-public class RoleEntity  implements Serializable {
+@Table(name = "especialidad")
+public class Especialidad implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
-    @Column(name = "role_name")
-    @Enumerated(EnumType.STRING)
-    private RoleEnum roleEnum;
-
+    @Column(nullable = false, unique = true)
+    @NotBlank
+    private String nombre;
 }

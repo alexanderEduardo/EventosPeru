@@ -1,14 +1,27 @@
 package com.alex.spring.security.demo.controllers;
 
+import com.alex.spring.security.demo.persistence.entity.UserEntity;
+import com.alex.spring.security.demo.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/method")
+@RequestMapping("/test")
 public class TestAuthControllers {
 
+    @Autowired
+    UserRepository userRepository;
+
     @GetMapping("/hello")
-    public String hello(){
+    public String hello()   {
         return "Hello World GET";
+    }
+
+    @GetMapping("/users")
+    public List<UserEntity> getUsers()   {
+        return (List<UserEntity>) userRepository.findAll();
     }
 
     @GetMapping("/hello-secured")

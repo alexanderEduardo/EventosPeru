@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout/layout :: head"></head>
+<body>
+<header th:replace="layout/layout :: header"></header>
+
+<div class="container py-4">
+
+    <div class="card border-primary text-center">
+        <div class="card-header">Por favor Inicia Sesion!</div>
+        <div class="card-body">
+            <form id="loginForm">
+                <div class="form-group col-sm-6">
+                    <input type="text" name="email" id="email"
+                           class="form-control" placeholder="correo" autofocus required/>
+                </div>
+                <div class="form-group col-sm-6">
+                    <input type="password" name="password" id="password"
+                           class="form-control" placeholder="contraseña" required/>
+                </div>
+                <div class="form-group col-sm-6">
+                    <input type="submit" class="btn btn-lg btn-primary btn-block"
+                           value="Sign In"/>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+
+<footer th:replace="layout/layout :: footer"></footer>
+<script type="application/javascript">
+    // JavaScript para manejar el submit del formulario
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+        e.preventDefault();  // Prevenir el comportamiento por defecto del formulario
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        // Crear el cuerpo del JSON
+        const loginData = {
+            email: email,
+            password: password
+        };
+
+        // Realizar la petición POST usando fetch API
+        fetch('/auth/log-in', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(loginData)
+        })
+            .then(response => {
+                // Primero verificamos si la respuesta es válida
+                return response.json().then(data => {
+                    if (response.ok) {
+                        // Manejo del éxito
+                        console.log('Respuesta del servidor:', data);
+                        const jwt = data.jwt;
+                        setCookie('jwt', jwt, 7); // Guarda el JWT en una cookie por 7 días
+                        Swal.fire({
+                            title: "Usuario Logeado exitosamente",
+                            text: "Haga click en el boton de abajo para redirigirse a la pagina de inicio",
+                            icon: "success",
+                            confirmButtonText: 'Ir a home'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = '/';
+                            }
+                        });
+                    } else {
+                        // Manejo del error cuando es 403 o diferente de 200
+                        console.error('Error en la autenticación:', data);
+                        if (response.status == 401) {
+                            Swal.fire({
+                                title: "Contraseña y/o correo incorrecto(s)",
+                                text: "Verifica si tus datos son correctos",
+                                icon: "error"
+                            });
+                        } else if (response.status == 403 && data.error == 'Account Disabled') {
+                            Swal.fire({
+                                title: "Su cuenta esta desabilitada",
+                                text: "Escriba un correo a eventos-peru@gmail.com para mas informacion",
+                                icon: "error"
+                            });
+                        } else {
+                            Swal.fire({
+                                title: "Server Internal Error",
+                                text: "Ha ocurrido un error inesperado",
+                                icon: "error"
+                            });
+                        }
+
+                    }
+                });
+            }).catch(error => {
+            console.error('Error interno en la solicitud:', error);
+            Swal.fire({
+                title: "Contraseña y/o correo incorrecto(s)",
+                text: "Verifica si tus datos son correctos",
+                icon: "error"
+            });
+        });
+    });
+
+
+    function setCookie(name, value, days) {
+        const expires = new Date();
+        expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+        const cookieString = `${name}=${value};expires=${expires.toUTCString()};path=/;secure;SameSite=Strict`;
+
+        // Si HttpOnly no se puede establecer desde JavaScript, debe hacerse desde el servidor
+        document.cookie = cookieString;
+    }
+</script>
+</body>
+</html>

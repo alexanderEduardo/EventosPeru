@@ -1,7 +1,11 @@
 package com.alex.spring.security.demo.config;
 
+import com.alex.spring.security.demo.auth.LoginSuccessHandler;
+import com.alex.spring.security.demo.exception.CustomAuthenticationEntryPoint;
 import com.alex.spring.security.demo.filters.JwtTokenValidator;
+import com.alex.spring.security.demo.interceptors.JwtCookieInterceptor;
 import com.alex.spring.security.demo.util.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,6 +30,7 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,11 +43,14 @@ public class SecurityConfig {
     //@Autowired
     //AuthenticationConfiguration authenticationConfiguration;
 
-    private final JwtUtil jwtUtil;
+    @Autowired
+    private LoginSuccessHandler successHandler;
 
-    public SecurityConfig(JwtUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
-    }
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private HttpServletRequest httpServletRequest;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
@@ -52,21 +60,33 @@ public class SecurityConfig {
         * */
 
         return httpSecurity
-                .csrf(csrf -> csrf.disable())
-                .httpBasic(Customizer.withDefaults())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(http->{
-                    http.requestMatchers(HttpMethod.POST, "/auth/**").permitAll();
-                    http.requestMatchers(HttpMethod.GET, "/method/hello").permitAll();
-                    http.requestMatchers(HttpMethod.GET, "/method/hello-secured").hasAuthority("READ");
-                    http.requestMatchers(HttpMethod.POST, "/method/post").hasAnyRole("ADMIN");
-                    http.requestMatchers(HttpMethod.PUT, "/method/put").hasAnyAuthority("UPDATE");
-                    http.requestMatchers(HttpMethod.DELETE, "/method/delete").hasAnyRole("INVITED");
-                   //http.requestMatchers(HttpMethod.DELETE, "/auth/delete").hasAnyAuthority("DELETE");
-                    http.anyRequest().denyAll();
-                    //http.anyRequest().authenticated();
-                })
-                //.addFilterBefore(new JwtTokenValidator(jwtUtil), BasicAuthenticationFilter.class)
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/auth/**", "/api/**")// Ignorar CSRF para estas rutas
+                )
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/css/**", "/js/**", "/images/**","/login", "/public/**","/test/**","/auth/**","/register").permitAll()
+                        .requestMatchers("/home").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()  // Cualquier otra solicitud debe estar autenticada
+                )
+                .exceptionHandling(exception->exception.authenticationEntryPoint(new CustomAuthenticationEntryPoint()))
+                .httpBasic( basic ->
+                        basic.disable())
+                .formLogin(
+                        form -> form.disable()
+                        /*.loginPage("/login")
+                        .successHandler(successHandler)
+                        .permitAll()*/
+                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                /*.logout( logout -> logout
+                        .logoutUrl("/logout")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                        .logoutSuccessUrl("/login?logout")
+                        .permitAll())*/
+                .addFilterBefore(new JwtTokenValidator(jwtUtil), BasicAuthenticationFilter.class)
                 .build();
     }
 
@@ -84,29 +104,17 @@ public class SecurityConfig {
         return provider;
     }
 
-    @Bean(name = "userDetailsServiceInMemoryBean")
-    public UserDetailsService userDetailsService(){
-        List<UserDetails> userDetails = new ArrayList<>();
-        userDetails.add(User.withUsername("admin")
-                .password("1234")
-                .roles("ADMIN")
-                .authorities("READ","CREATE").build());
-        userDetails.add(User.withUsername("alex")
-                .password("1234")
-                .roles("USER")
-                .authorities("READ").build());
-        return new InMemoryUserDetailsManager(userDetails);
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder(){
-        return NoOpPasswordEncoder.getInstance();
-    }
-
     @Bean
     @Primary
     public PasswordEncoder passwordEncoderByCrypt(){
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public RestTemplate restTemplate() {
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getInterceptors().add(new JwtCookieInterceptor(httpServletRequest));
+        return restTemplate;
     }
 
 }
