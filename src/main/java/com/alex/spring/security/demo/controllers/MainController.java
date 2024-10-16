@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.SessionAttributes;
 
 @Controller
-@SessionAttributes("usuario")
 public class MainController {
     protected final Log logger = LogFactory.getLog(this.getClass());
 

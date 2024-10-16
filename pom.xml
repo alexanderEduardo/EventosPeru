@@ -6,13 +6,13 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.3.1</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
-	<groupId>com.alex.spring.lab01</groupId>
-	<artifactId>spring-lab-01</artifactId>
+	<groupId>com.alex.eventos.peru</groupId>
+	<artifactId>spring-eventos-peru</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>spring-lab-01</name>
-	<description>Demo project for Spring Boot</description>
+	<name>eventos-peru</name>
+	<description>Web for Eventos Peru</description>
 	<url/>
 	<licenses>
 		<license/>

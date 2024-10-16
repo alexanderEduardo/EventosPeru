@@ -39,6 +39,12 @@ public class AdminController {
     @Autowired
     RestTemplate restTemplate;
 
+    @RequestMapping(value =  "/", method = RequestMethod.GET)
+    public String adminHome(){
+        return "redirect:/home";
+    }
+
+
     //ver clientes
     @GetMapping("/clientes")
     public String clientes(Authentication authentication, Model model) {
