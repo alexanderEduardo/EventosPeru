@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout/layout :: head"></head>
+<body>
+<header th:replace="layout/layout :: header"></header>
+<div class="container mt-5">
+    <h3 class="text-center mb-4">Solicitud de Presupuesto para <span th:text="${local.nombreLocal}"></span></h3>
+    <form action="/procesar-solicitud-presupuesto" id="procesar-solicitud" method="POST">
+        <!-- Datos del Solicitante -->
+        <fieldset class="border p-4 mb-4">
+            <legend class="w-auto px-3">Datos del Solicitante</legend>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="nombre" class="form-label">Nombre Completo</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ingrese su nombre completo" required>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="email" class="form-label">Correo Electrónico</label>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="Ingrese su correo electrónico" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="telefono" class="form-label">Teléfono</label>
+                <input type="tel" class="form-control" id="telefono" name="telefono" placeholder="Ingrese su número de teléfono">
+            </div>
+        </fieldset>
+
+        <!-- Detalles del Evento -->
+        <fieldset class="border p-4 mb-4">
+            <legend class="w-auto px-3">Detalles del Evento</legend>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="fechaEvento" class="form-label">Fecha del Evento</label>
+                    <input type="date" class="form-control" id="fechaEvento" name="fechaEvento" required>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="invitados" class="form-label">Cantidad de Invitados</label>
+                    <input type="number" class="form-control" id="invitados" name="cantidadInvitados" placeholder="Número de invitados" required>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Servicios Adicionales -->
+        <fieldset class="border p-4 mb-4">
+            <legend class="w-auto px-3">Servicios Adicionales Disponibles</legend>
+            <div class="form-group">
+                <label class="form-label">Seleccione los servicios adicionales que desea:</label>
+                <div th:each="servicio : ${serviciosDisponibles}" class="form-check">
+                    <input class="form-check-input" type="checkbox" th:id="'servicio_' + ${servicio.idLocalServicio}" th:name="serviciosSeleccionados" th:value="${servicio.idLocalServicio}">
+                    <label class="form-check-label" th:for="'servicio_' + ${servicio.idLocalServicio}" th:text="${servicio.servicio.nombre} + ' (Precio: S/ ' + ${servicio.precio} + ')'"></label>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- Comentarios Adicionales -->
+        <fieldset class="border p-4 mb-4">
+            <legend class="w-auto px-3">Comentarios o Solicitudes Especiales</legend>
+            <div class="form-group">
+                <label for="comentarios" class="form-label">Detalles adicionales:</label>
+                <textarea class="form-control" id="comentarios" name="comentarios" rows="3" placeholder="Ingrese aquí cualquier comentario adicional"></textarea>
+            </div>
+        </fieldset>
+
+        <input type="hidden" name="localId" id="localId" th:value="${local.idLocal}">
+        <!-- Botón de Enviar -->
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary btn-lg">Enviar Solicitud</button>
+        </div>
+    </form>
+</div>
+
+<!-- Pantalla de Carga -->
+<div id="loadingOverlay">
+    <img th:src="@{/images/loading.gif}" alt="Cargando..." />
+</div>
+
+<!-- Modal para el Pop-up -->
+<div class="modal fade" id="resultadoSolicitudModal" tabindex="-1" role="dialog" aria-labelledby="resultadoSolicitudLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resultadoSolicitudLabel">Solicitud Procesada</h5>
+                <!-- Quitar el botón de cierre "X" si no lo necesitas -->
+            </div>
+            <div class="modal-body">
+                <p><strong>Nombre:</strong> <span id="modalNombre"></span></p>
+                <p><strong>Correo:</strong> <span id="modalCorreo"></span></p>
+                <p><strong>Fecha del Evento:</strong> <span id="modalFechaEvento"></span></p>
+                <p><strong>Presupuesto Estimado:</strong> S/ <span id="modalPresupuesto"></span></p>
+                <p id="modalMensajeInformativo" class="mt-3"></p>
+            </div>
+            <div class="modal-footer">
+                <a href="/" class="btn btn-primary">Ir a Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="layout/layout :: footer"></footer>
+<script th:src="@{/js/presupuesto-form.js}"></script>
+</body>
+</html>
