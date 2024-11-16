@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout/layout :: head"></head>
+<body>
+<header th:replace="layout/layout :: header"></header>
+<div class="container my-4">
+    <h2 class="text-center">Galería de Locales</h2>
+    <div class="row">
+        <!-- Aquí se renderizarán las tarjetas de cada local -->
+        <div th:each="local : ${locales}" class="col-md-4 mb-4">
+            <div class="card shadow-sm">
+                <!-- Imagen del local -->
+                <img th:src="@{'/images/upload/locales/'+${local.imagen}}" class="card-img-top" alt="Imagen del Local">
+
+                <div class="card-body">
+                    <!-- Nombre del local -->
+                    <h5 class="card-title" th:text="${local.nombreLocal}">Nombre del Local</h5>
+
+                    <!-- Dirección -->
+                    <p class="card-text" th:text="${local.direccion}">Dirección del Local</p>
+
+                    <!-- Capacidad -->
+                    <p class="card-text"><strong>Capacidad:</strong> <span th:text="${local.capacidad}">0</span> personas</p>
+
+                    <!-- Precio base -->
+                    <p class="card-text"><strong>Precio Base:</strong> S/ <span th:text="${local.precioBase}">0.00</span></p>
+
+                    <!-- Botón de Solicitar Presupuesto -->
+                    <a th:href="@{/matrimonio/solicitar-presupuesto/{id}(id=${local.idLocal})}" class="btn btn-primary">Solicitar Presupuesto</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<footer th:replace="layout/layout :: footer"></footer>
+</body>
+</html>
