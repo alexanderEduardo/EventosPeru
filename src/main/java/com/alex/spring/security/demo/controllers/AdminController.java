@@ -1,14 +1,18 @@
 package com.alex.spring.security.demo.controllers;
 
 import com.alex.spring.security.demo.controllers.dto.*;
-import com.alex.spring.security.demo.persistence.entity.Cliente;
-import com.alex.spring.security.demo.persistence.entity.Especialidad;
-import com.alex.spring.security.demo.persistence.entity.Proveedor;
-import com.alex.spring.security.demo.persistence.entity.UserEntity;
+import com.alex.spring.security.demo.persistence.entity.*;
 import com.alex.spring.security.demo.services.IUserService;
+import com.alex.spring.security.demo.services.MatrimonioService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +26,13 @@ import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @SessionAttributes(names = {"cliente","proveedor"})
 @Controller
@@ -38,6 +46,9 @@ public class AdminController {
 
     @Autowired
     RestTemplate restTemplate;
+
+    @Autowired
+    MatrimonioService matrimonioService;
 
     @RequestMapping(value =  "/", method = RequestMethod.GET)
     public String adminHome(){
@@ -347,5 +358,106 @@ public class AdminController {
             return "redirect:/admin/proveedores";
         }
     }
+
+    @RequestMapping(value = "/solicitudes")
+    public String solicitudesEventos(Model model){
+        List<Solicitud> solicitudes = matrimonioService.obtenerSolicitudes();
+        model.addAttribute("solicitudes",solicitudes);
+        return "admin/solicitudes";
+    }
+
+    @RequestMapping(value = "/exportar-solicitudes", method = RequestMethod.GET)
+    public void exportarSolicitudes(HttpServletResponse response) throws IOException {
+        // Obtener todas las solicitudes
+        List<Solicitud> solicitudes = matrimonioService.obtenerSolicitudes();
+
+        // Configura la respuesta HTTP
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=solicitudes.xlsx");
+
+        // Crear el archivo Excel
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Solicitudes");
+
+        // Crear la fila de encabezado
+        Row headerRow = sheet.createRow(0);
+        String[] columnas = {"ID", "Local", "Cliente", "Correo", "Fecha Evento", "Cantidad Invitados",
+                "Presupuesto Final", "Fecha de Actualización", "Fecha Creación", "Estado"};
+        for (int i = 0; i < columnas.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(columnas[i]);
+        }
+
+        // Llenar los datos
+        int rowNum = 1;
+        for (Solicitud solicitud : solicitudes) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(solicitud.getIdSolicitud());
+            row.createCell(1).setCellValue(solicitud.getLocal() != null ? solicitud.getLocal().getNombreLocal() : "");
+            row.createCell(2).setCellValue(solicitud.getCliente() != null ? solicitud.getCliente().getUsuario().getUsername() + " " + solicitud.getCliente().getApellido() : "");
+            row.createCell(3).setCellValue(solicitud.getCorreo());
+            row.createCell(4).setCellValue(solicitud.getFechaEvento().toString());
+            row.createCell(5).setCellValue(solicitud.getCantidadInvitados());
+            row.createCell(6).setCellValue(solicitud.getPresupuestoFinal() != null ? solicitud.getPresupuestoFinal().toString() : "");
+            row.createCell(7).setCellValue(solicitud.getFechaActualizacion().toString());
+            row.createCell(8).setCellValue(solicitud.getFechaCreacion().toString());
+            row.createCell(9).setCellValue(solicitud.getEstado().toString());
+        }
+
+        // Ajustar columnas al contenido
+        for (int i = 0; i < columnas.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        // Escribir el archivo en la respuesta
+        workbook.write(response.getOutputStream());
+        workbook.close();
+    }
+
+    @RequestMapping(value = "/exportar-eventos-por-mes", method = RequestMethod.GET)
+    public void exportarEventosPorMes(HttpServletResponse response) throws IOException {
+        // Obtener todas las solicitudes
+        List<Solicitud> solicitudes = matrimonioService.obtenerSolicitudes();
+
+        Map<Month, Long> eventosPorMes = solicitudes.stream()
+                .collect(Collectors.groupingBy(
+                        solicitud -> solicitud.getFechaEvento().getMonth(), // Agrupar por mes
+                        Collectors.counting() // Contar eventos por mes
+                ));
+
+        // Configurar la respuesta HTTP
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=eventos_por_mes.xlsx");
+
+        // Crear el archivo Excel
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Eventos por Mes");
+
+        // Crear la fila de encabezado
+        Row headerRow = sheet.createRow(0);
+        String[] columnas = {"Mes", "Cantidad de Eventos"};
+        for (int i = 0; i < columnas.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(columnas[i]);
+        }
+
+        // Llenar los datos
+        int rowNum = 1;
+        for (Map.Entry<Month, Long> entry : eventosPorMes.entrySet()) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(entry.getKey().toString()); // Nombre del mes
+            row.createCell(1).setCellValue(entry.getValue()); // Cantidad de eventos
+        }
+
+        // Ajustar las columnas al contenido
+        for (int i = 0; i < columnas.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        // Escribir el archivo en la respuesta
+        workbook.write(response.getOutputStream());
+        workbook.close();
+    }
+
 
 }
