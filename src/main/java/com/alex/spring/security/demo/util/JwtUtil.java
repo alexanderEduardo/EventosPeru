@@ -1,5 +1,6 @@
 package com.alex.spring.security.demo.util;
 
+import com.alex.spring.security.demo.persistence.entity.utils.UserCustomDetails;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -42,10 +43,14 @@ public class JwtUtil {
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.joining(","));
 
+            UserCustomDetails details = (UserCustomDetails)authentication.getDetails();
+            String email = details.getEmail();
+
             String jwt = JWT.create()
                     .withIssuer(userGenerator)
                     .withSubject(username)
                     .withClaim("authorities",authorities)
+                    .withClaim("email",email)
                     .withIssuedAt(new Date())
                     .withExpiresAt(new Date(System.currentTimeMillis() + 1800000))
                     .withJWTId(UUID.randomUUID().toString())

@@ -1,5 +1,7 @@
 package com.alex.spring.security.demo.filters;
 
+import com.alex.spring.security.demo.persistence.entity.utils.UserCustomDetails;
+import com.alex.spring.security.demo.services.IUserService;
 import com.alex.spring.security.demo.util.JwtUtil;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.servlet.FilterChain;
@@ -44,11 +46,14 @@ public class JwtTokenValidator extends OncePerRequestFilter {
 
                 String username = jwtUtil.extractUsername(decodedJWT);
                 String stringAuthorities = jwtUtil.getSpecificClaim(decodedJWT, "authorities").asString();
+                String email = jwtUtil.getSpecificClaim(decodedJWT,"email").asString();
 
                 Collection<? extends GrantedAuthority> authorities = AuthorityUtils.commaSeparatedStringToAuthorityList(stringAuthorities);
+                // Cargar el usuario desde el servicio de usuario
 
                 SecurityContext context = SecurityContextHolder.createEmptyContext();
                 Authentication authenticationToken = new UsernamePasswordAuthenticationToken(username, null, authorities);
+                ((UsernamePasswordAuthenticationToken) authenticationToken).setDetails(new UserCustomDetails(email));
                 context.setAuthentication(authenticationToken);
                 SecurityContextHolder.setContext(context);
             } catch (Exception e) {

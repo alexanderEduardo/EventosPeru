@@ -28,4 +28,6 @@ public interface IUserService {
     void createUserAndProvider(UserEntity user, Proveedor proveedor);
     void updateProviderAndUser(EditProviderRequest providerRequest);
     void registerUserAsProvider(CreateProviderRequest createProviderRequest);
+
+    Cliente buscarClientePorEmail(String email);
 }

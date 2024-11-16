@@ -3,6 +3,7 @@ package com.alex.spring.security.demo.config;
 import com.alex.spring.security.demo.exception.CustomAuthenticationEntryPoint;
 import com.alex.spring.security.demo.filters.JwtTokenValidator;
 import com.alex.spring.security.demo.interceptors.JwtCookieInterceptor;
+import com.alex.spring.security.demo.services.IUserService;
 import com.alex.spring.security.demo.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,13 +41,14 @@ public class SecurityConfig {
 
         return httpSecurity
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/auth/**", "/api/**")
+                        .ignoringRequestMatchers("/auth/**", "/api/**", "/matrimonio/**")
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/css/**", "/js/**", "/images/**","/login","/register","/public/**","/test/**","/auth/**").permitAll()
                         .requestMatchers("/home").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/**").hasRole("ADMIN")
+                        .requestMatchers("/matrimonio/**").hasRole("CLIENTE")
                         .anyRequest().denyAll()  // Cualquier otra solicitud debe estar autenticada
                 )
                 .exceptionHandling(exception->exception.authenticationEntryPoint(new CustomAuthenticationEntryPoint()))

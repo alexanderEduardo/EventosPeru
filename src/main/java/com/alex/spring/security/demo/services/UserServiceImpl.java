@@ -196,6 +196,12 @@ public class UserServiceImpl implements IUserService{
     }
 
     @Override
+    public Cliente buscarClientePorEmail(String email) {
+        Optional<Cliente> cliente = clienteRepository.findByUsuarioEmail(email);
+        return cliente.orElse(null);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<Cliente> findClient(Integer id) {
         return clienteRepository.findById(id);

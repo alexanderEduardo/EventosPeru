@@ -1,8 +1,6 @@
 package com.alex.spring.security.demo.persistence.entity;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
-
 import jakarta.persistence.*;
 import lombok.*;
 @Setter
@@ -18,32 +16,14 @@ public class Servicio implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idServicio;
 
+    @Column(nullable = false, length = 100)
+    private String nombre;
+
+    @Column(length = 50)
+    private String tipo;
+
+    @Column(columnDefinition = "TEXT")
     private String descripcion;
-
-    @ManyToOne
-    @JoinColumn(name = "id_cliente")
-    private Cliente cliente;
-
-    @ManyToOne
-    @JoinColumn(name = "id_proveedor")
-    private Proveedor proveedor;
-
-    @Enumerated(EnumType.STRING)
-    private Estado estado;
-
-    private LocalDateTime fechaSolicitud;
-    private LocalDateTime fechaEvento;
-
-    @ManyToOne
-    @JoinColumn(name = "id_local")
-    private Local local;
-
-    private Float presupuesto;
-
-    @Enumerated(EnumType.STRING)
-    private PresupuestoEstado presupuestoAprobado;
-
-    private Integer capacidad;
 
     // Getters y setters
 

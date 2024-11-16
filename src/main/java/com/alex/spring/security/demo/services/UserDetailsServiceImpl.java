@@ -8,6 +8,7 @@ import com.alex.spring.security.demo.persistence.entity.Cliente;
 import com.alex.spring.security.demo.persistence.entity.RoleEntity;
 import com.alex.spring.security.demo.persistence.entity.RoleEnum;
 import com.alex.spring.security.demo.persistence.entity.UserEntity;
+import com.alex.spring.security.demo.persistence.entity.utils.UserCustomDetails;
 import com.alex.spring.security.demo.repository.RoleRepository;
 import com.alex.spring.security.demo.repository.UserRepository;
 import com.alex.spring.security.demo.util.JwtUtil;
@@ -72,11 +73,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public AuthResponse loginUser(AuthLoginRequest authLoginRequest, HttpServletRequest request, AuthenticationManager authenticationManager){
         String email = authLoginRequest.email();
         String password = authLoginRequest.password();
+        UserCustomDetails userDetails = new UserCustomDetails(email);
 
         //Authentication authentication = this.authenticate(username, password);
         SecurityContext securityContext = SecurityContextHolder.getContext();
-
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+        // Establecer los detalles personalizados en la autenticación
+        ((UsernamePasswordAuthenticationToken) authentication).setDetails(userDetails);
         securityContext.setAuthentication(authentication);
         // También puedes asociar la sesión con el contexto de seguridad
         HttpSession session = request.getSession(true);
