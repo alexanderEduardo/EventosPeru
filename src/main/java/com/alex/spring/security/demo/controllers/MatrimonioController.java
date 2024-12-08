@@ -7,19 +7,27 @@ import com.alex.spring.security.demo.persistence.entity.utils.UserCustomDetails;
 import com.alex.spring.security.demo.services.EmailService;
 import com.alex.spring.security.demo.services.IUserService;
 import com.alex.spring.security.demo.services.MatrimonioService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 public class MatrimonioController {
@@ -37,6 +45,13 @@ public class MatrimonioController {
         List<Local> locales = matrimonioService.getLocales();
         model.addAttribute("locales",locales);
         return "locales";
+    }
+
+    @GetMapping(value = {"/public/proveedores"})
+    public String verProveedores(Model model){
+        List<Proveedor> proveedores = matrimonioService.getProveedores();
+        model.addAttribute("proveedores",proveedores);
+        return "proveedores";
     }
 
     @GetMapping("matrimonio/solicitar-presupuesto/{idLocal}")
@@ -57,7 +72,8 @@ public class MatrimonioController {
 
     @PostMapping("matrimonio/procesar-solicitud-presupuesto")
     @ResponseBody
-    public ResponseEntity<ResponseSolicitudPresupuesto> procesarSolicitudPresupuesto(@RequestBody SolicitudFormDTO solicitudForm) {
+    public ResponseEntity<?> procesarSolicitudPresupuesto(@Valid @RequestBody SolicitudFormDTO solicitudForm, BindingResult result) {
+
         Integer cantidadInvitados = solicitudForm.getCantidadInvitados();
         String comentarios = solicitudForm.getComentarios();
         String email = solicitudForm.getEmail();
@@ -67,15 +83,42 @@ public class MatrimonioController {
         LocalDate fechaEvento = solicitudForm.getFechaEvento();
         List<Integer> serviciosSeleccionados = solicitudForm.getServiciosSeleccionados();
 
-        String emailFromCurrentUser = getEmailFromCurrentUser();
-        Cliente cliente = userService.buscarClientePorEmail(emailFromCurrentUser);
-        if(cliente == null){
-            throw new RuntimeException("el cliente no fue encontrado");
-        }
-
-        // Buscar el local seleccionado
+        LocalDate fechaHoy = LocalDate.now();
         Local local = matrimonioService.findLocalById(localId)
                 .orElseThrow(() -> new RuntimeException("Local no encontrado"));
+
+        if (cantidadInvitados != null && cantidadInvitados > local.getCapacidad()) {
+            result.rejectValue("cantidadInvitados", null,
+                    "La cantidad de invitados excede la capacidad del local (" + local.getCapacidad() + ")");
+        }
+
+        if (fechaEvento != null && fechaEvento.isBefore(fechaHoy)) {
+            // Agregar el error al BindingResult
+            result.rejectValue("fechaEvento", null, "La fecha del evento no puede ser anterior al día de hoy.");
+        }
+
+        // Verificar si hay errores de validación
+        if (result.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            result.getAllErrors().forEach(error -> {
+                String fieldName = ((FieldError) error).getField();
+                String errorMessage = error.getDefaultMessage();
+                errors.put(fieldName, errorMessage);
+            });
+
+            Map<String, Object> errorDetails = Map.of(
+                    "status", HttpStatus.BAD_REQUEST.value(),
+                    "errorType", "VALIDATION_ERROR",
+                    "message", "Error de validación: algunos campos contienen errores",
+                    "errors", errors
+            );
+
+            return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+        }
+
+        Cliente cliente = getCurrentCustomer();
+
+        // Buscar el local seleccionado
         BigDecimal precioBaseLocal = local.getPrecioBase();
         BigDecimal presupuestoFinalInicial = BigDecimal.ZERO;
         presupuestoFinalInicial = presupuestoFinalInicial.add(precioBaseLocal);
@@ -111,6 +154,15 @@ public class MatrimonioController {
                 "Muchas gracias por crear la solicitud. Pronto recibira un correo con la confirmacion de su presupuesto"));
     }
 
+    private Cliente getCurrentCustomer() {
+        String emailFromCurrentUser = getEmailFromCurrentUser();
+        Cliente cliente = userService.buscarClientePorEmail(emailFromCurrentUser);
+        if(cliente == null){
+            throw new RuntimeException("el cliente no fue encontrado");
+        }
+        return cliente;
+    }
+
     private static String getEmailFromCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserCustomDetails details = (UserCustomDetails) authentication.getDetails();
@@ -135,6 +187,39 @@ public class MatrimonioController {
         Solicitud solicitud = matrimonioService.findSolicitudById(id);
         model.addAttribute("solicitud", solicitud);
         return "revisarSolicitud";
+    }
+
+    @GetMapping("/cliente/ver-solicitudes")
+    public String verSolicitudesDelCliente(Model model, RedirectAttributes flash) {
+        Cliente cliente = getCurrentCustomer();
+        Optional<Cliente> optionalCliente = matrimonioService.findClientById(cliente.getIdCliente());
+        if (optionalCliente.isPresent()) {
+            List<Solicitud> solicitudesActualizadas = matrimonioService.actualizarEstadoYObtenerSolicitudes(optionalCliente.get().getIdCliente());
+            model.addAttribute("solicitudes", solicitudesActualizadas);
+            return "ver-solicitudes";
+        }
+
+        flash.addFlashAttribute("error", "No se encontró el cliente en el sistema.");
+        return "redirect:/home";
+    }
+
+    @PostMapping("/cliente/solicitudes/aceptar/{id}")
+    public String aceptarSolicitud(@PathVariable Integer id, Model model) {
+        Solicitud solicitud = matrimonioService.findSolicitudById(id);
+        solicitud.setEstado(Solicitud.EstadoSolicitud.CERRADO); // Cambiar al estado que corresponda
+        matrimonioService.saveSolicitud(solicitud);
+        return "redirect:/cliente/ver-solicitudes";
+    }
+
+    // Acción para rechazar presupuesto
+    @PostMapping("/cliente/solicitudes/rechazar/{id}")
+    public String rechazarSolicitud(@PathVariable Integer id, Model model) {
+        Solicitud solicitud = matrimonioService.findSolicitudById(id);
+        solicitud.setEstado(Solicitud.EstadoSolicitud.CANCELADO);
+        matrimonioService.saveSolicitud(solicitud);
+        List<Solicitud> solicitudes = matrimonioService.obtenerSolicitudesPorCliente(solicitud.getCliente().getIdCliente());
+        model.addAttribute("solicitudes", solicitudes);
+        return "redirect:/cliente/ver-solicitudes";
     }
 
 }

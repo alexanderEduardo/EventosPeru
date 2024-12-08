@@ -1,9 +1,6 @@
 package com.alex.spring.security.demo.services;
 
-import com.alex.spring.security.demo.persistence.entity.Cliente;
-import com.alex.spring.security.demo.persistence.entity.Local;
-import com.alex.spring.security.demo.persistence.entity.LocalServicio;
-import com.alex.spring.security.demo.persistence.entity.Solicitud;
+import com.alex.spring.security.demo.persistence.entity.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -18,7 +15,11 @@ public interface MatrimonioService {
     void guardarServiciosParaSolicitud(Solicitud solicitud, List<Integer> serviciosSeleccionados);
     Solicitud findSolicitudById(Integer id);
     void saveSolicitud(Solicitud solicitud);
-
     List<Solicitud> obtenerSolicitudes();
-
+    Local saveLocal(Local local);
+    void deleteLocalById(Integer id);
+    Optional<Cliente> findClientById(Integer id);
+    List<Solicitud> obtenerSolicitudesPorCliente(Integer idCliente);
+    List<Solicitud> actualizarEstadoYObtenerSolicitudes(Integer idCliente);
+    List<Proveedor> getProveedores();
 }

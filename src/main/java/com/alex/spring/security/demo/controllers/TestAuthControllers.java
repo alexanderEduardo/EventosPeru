@@ -43,4 +43,9 @@ public class TestAuthControllers {
     public String deleteMethod(){
         return "Hello World DELETE";
     }
+
+    @GetMapping("/get-test")
+    public String postMethodRe(){
+        return "redirect:/home";
+    }
 }

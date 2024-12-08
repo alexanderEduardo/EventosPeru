@@ -47,7 +47,9 @@
                     <td th:text="${solicitud.fechaCreacion}"></td>
                     <td th:text="${solicitud.estado}"></td>
                     <td>
-                        <a class="btn btn-sm btn-primary" th:href="@{'/admin/revisar-solicitud/'+${solicitud.idSolicitud}}">
+                        <!-- Botón solo si el estado NO es PRESUPUESTO_ENVIADO -->
+                        <a class="btn btn-sm btn-primary" th:if="${solicitud.estado == T(com.alex.spring.security.demo.persistence.entity.Solicitud.EstadoSolicitud).RECIBIDO}"
+                           th:href="@{'/admin/revisar-solicitud/'+${solicitud.idSolicitud}}">
                             <i class="fa fa-eye"></i> Revisar
                         </a>
                     </td>

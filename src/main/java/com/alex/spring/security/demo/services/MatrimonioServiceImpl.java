@@ -1,10 +1,7 @@
 package com.alex.spring.security.demo.services;
 
 import com.alex.spring.security.demo.persistence.entity.*;
-import com.alex.spring.security.demo.repository.LocalRepository;
-import com.alex.spring.security.demo.repository.LocalServicioRepository;
-import com.alex.spring.security.demo.repository.SolicitudRepository;
-import com.alex.spring.security.demo.repository.SolicitudServicioRepository;
+import com.alex.spring.security.demo.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +26,12 @@ public class MatrimonioServiceImpl implements MatrimonioService {
 
     @Autowired
     private SolicitudServicioRepository solicitudServicioRepository;
+
+    @Autowired
+    private ClienteRepository clienteRepository;
+
+    @Autowired
+    private ProveedorRepository proveedorRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -82,19 +85,61 @@ public class MatrimonioServiceImpl implements MatrimonioService {
         }
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Solicitud findSolicitudById(Integer id) {
         return solicitudRepository.findById(id).orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
     }
 
+    @Transactional
     @Override
     public void saveSolicitud(Solicitud solicitud) {
         solicitudRepository.save(solicitud);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<Solicitud> obtenerSolicitudes() {
         return (List<Solicitud>) solicitudRepository.findAll();
+    }
+
+    @Transactional
+    @Override
+    public Local saveLocal(Local local) {
+        return localRepository.save(local);
+    }
+
+    @Transactional
+    @Override
+    public void deleteLocalById(Integer id) {
+        localRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Optional<Cliente> findClientById(Integer id) {
+        return clienteRepository.findById(id);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<Solicitud> obtenerSolicitudesPorCliente(Integer idCliente) {
+        return solicitudRepository.findByClienteIdCliente(idCliente);
+    }
+
+    @Transactional
+    @Override
+    public List<Solicitud> actualizarEstadoYObtenerSolicitudes(Integer idCliente) {
+        // Actualizar las solicitudes con estado PRESUPUESTO_ENVIADO a ESPERANDO_RESPUESTA_DEL_CLIENTE
+        solicitudRepository.updateEstadoSolicitudByClienteId(idCliente);
+
+        // Obtener las solicitudes actualizadas del cliente
+        return solicitudRepository.findByClienteIdCliente(idCliente);
+    }
+
+    @Override
+    public List<Proveedor> getProveedores() {
+        return (List<Proveedor>) proveedorRepository.findAll();
     }
 
 }

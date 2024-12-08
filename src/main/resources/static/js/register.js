@@ -1,10 +1,5 @@
-function setErrorMessage(field, message) {
-    const errorElement = document.getElementById(`${field}Error`);
-    if (errorElement) {
-        errorElement.textContent = message;
-    }
-}
 
+import {clearErrors,setErrorMessage} from './utils.js';
 document.getElementById('registerForm').addEventListener('submit', function (e) {
     e.preventDefault();
     const $name = document.getElementById('name').value;
@@ -89,10 +84,3 @@ document.getElementById('registerForm').addEventListener('submit', function (e) 
 
 
 });
-
-function clearErrors() {
-    const errorMessages = document.querySelectorAll('.error-message');
-    errorMessages.forEach(element => {
-        element.textContent = '';
-    });
-}

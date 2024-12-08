@@ -55,6 +55,12 @@
         <li class="nav-item" sec:authorize="hasRole('ROLE_ADMIN')">
           <a class="nav-link" th:href="@{/admin/solicitudes}">Ver Solicitudes de Eventos</a>
         </li>
+        <li class="nav-item" sec:authorize="hasRole('ROLE_ADMIN')">
+          <a class="nav-link" th:href="@{/admin/locales}">Panel Locales</a>
+        </li>
+        <li class="nav-item" sec:authorize="hasRole('ROLE_CLIENTE')">
+          <a class="nav-link" th:href="@{/cliente/ver-solicitudes}">Ver mi solicitudes</a>
+        </li>
       </ul>
       <ul class="navbar-nav navbar-right">
 
@@ -65,7 +71,7 @@
 
         <!-- Botón "Sign In" -->
         <li sec:authorize="!isAuthenticated()">
-          <a class="btn btn-outline-primary" th:href="@{/login}">Sign In</a>
+          <a class="btn btn-outline-primary" th:href="@{/login}">Login</a>
         </li>
 
         <li sec:authorize="isAuthenticated()" class="dropdown show">

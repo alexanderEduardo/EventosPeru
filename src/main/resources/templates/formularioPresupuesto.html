@@ -5,23 +5,26 @@
 <header th:replace="layout/layout :: header"></header>
 <div class="container mt-5">
     <h3 class="text-center mb-4">Solicitud de Presupuesto para <span th:text="${local.nombreLocal}"></span></h3>
-    <form action="/procesar-solicitud-presupuesto" id="procesar-solicitud" method="POST">
+    <form id="procesar-solicitud">
         <!-- Datos del Solicitante -->
         <fieldset class="border p-4 mb-4">
             <legend class="w-auto px-3">Datos del Solicitante</legend>
             <div class="form-row">
                 <div class="form-group col-md-6">
                     <label for="nombre" class="form-label">Nombre Completo</label>
-                    <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ingrese su nombre completo" required>
+                    <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ingrese su nombre completo" >
+                    <div class="error-message text-danger" id="nombreError"></div>
                 </div>
                 <div class="form-group col-md-6">
                     <label for="email" class="form-label">Correo Electrónico</label>
-                    <input type="email" class="form-control" id="email" name="email" placeholder="Ingrese su correo electrónico" required>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="Ingrese su correo electrónico" >
+                    <div class="error-message text-danger" id="emailError"></div>
                 </div>
             </div>
             <div class="form-group">
                 <label for="telefono" class="form-label">Teléfono</label>
                 <input type="tel" class="form-control" id="telefono" name="telefono" placeholder="Ingrese su número de teléfono">
+                <div class="error-message text-danger" id="telefonoError"></div>
             </div>
         </fieldset>
 
@@ -31,11 +34,13 @@
             <div class="form-row">
                 <div class="form-group col-md-6">
                     <label for="fechaEvento" class="form-label">Fecha del Evento</label>
-                    <input type="date" class="form-control" id="fechaEvento" name="fechaEvento" required>
+                    <input type="date" class="form-control" id="fechaEvento" name="fechaEvento">
+                    <div class="error-message text-danger" id="fechaEventoError"></div>
                 </div>
                 <div class="form-group col-md-6">
                     <label for="invitados" class="form-label">Cantidad de Invitados</label>
-                    <input type="number" class="form-control" id="invitados" name="cantidadInvitados" placeholder="Número de invitados" required>
+                    <input type="number" class="form-control" id="invitados" name="cantidadInvitados" placeholder="Número de invitados">
+                    <div class="error-message text-danger" id="cantidadInvitadosError"></div>
                 </div>
             </div>
         </fieldset>
@@ -47,7 +52,8 @@
                 <label class="form-label">Seleccione los servicios adicionales que desea:</label>
                 <div th:each="servicio : ${serviciosDisponibles}" class="form-check">
                     <input class="form-check-input" type="checkbox" th:id="'servicio_' + ${servicio.idLocalServicio}" th:name="serviciosSeleccionados" th:value="${servicio.idLocalServicio}">
-                    <label class="form-check-label" th:for="'servicio_' + ${servicio.idLocalServicio}" th:text="${servicio.servicio.nombre} + ' (Precio: S/ ' + ${servicio.precio} + ')'"></label>
+                    <label class="form-check-label" th:for="'servicio_' + ${servicio.idLocalServicio}" th:text="${servicio.servicio.nombre
+                    } + ' (Precio: S/ ' + ${servicio.precio} + ')'"></label>
                 </div>
             </div>
         </fieldset>
@@ -62,9 +68,10 @@
         </fieldset>
 
         <input type="hidden" name="localId" id="localId" th:value="${local.idLocal}">
+        <div class="error-message text-danger" id="localIdError"></div>
         <!-- Botón de Enviar -->
         <div class="text-center">
-            <button type="submit" class="btn btn-primary btn-lg">Enviar Solicitud</button>
+            <input type="submit" class="btn btn-primary btn-lg" value="Enviar Solicitud" />
         </div>
     </form>
 </div>
@@ -97,6 +104,6 @@
 </div>
 
 <footer th:replace="layout/layout :: footer"></footer>
-<script th:src="@{/js/presupuesto-form.js}"></script>
+<script type="module" th:src="@{/js/presupuesto-form.js}"></script>
 </body>
 </html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="layout/layout :: head"></head>
+<body>
+    <header th:replace="layout/layout :: header"></header>
+    <div class="container py-4">
+        <div class="card bg-light">
+            <div class="card-header" th:text="${titulo}"></div>
+            <div class="card-body">
+
+                <h4 class="card-title" sec:authorize="hasRole('ROLE_ADMIN')">
+                    <a th:href="@{/admin/form/locales}" class="btn btn-primary btn-xs">Crear Local</a>
+                </h4>
+                <table class="table table-striped table-bordered">
+                    <thead class="thead-inverse">
+                    <tr>
+                        <th>id</th>
+                        <th>nombre</th>
+                        <th>precio base</th>
+                        <th>imagen</th>
+                        <th>capacidad</th>
+                        <th>direccion</th>
+                        <th>descripcion</th>
+                        <th>editar</th>
+                        <th>eliminar</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="local: ${locales}">
+                        <td th:text="${local.idLocal}"></td>
+                        <td th:text="${local.nombreLocal}"></td>
+                        <td th:text="${local.precioBase}"></td>
+                        <td><img th:src="@{'/images/upload/locales/'+${local.imagen}}" width="70px" height="70px"></td>
+                        <td th:text="${local.capacidad}"></td>
+                        <td th:text="${local.direccion}"></td>
+                        <td th:text="${local.descripcion}"></td>
+                        <td sec:authorize="hasRole('ROLE_ADMIN')">
+                            <a class="btn btn-primary btn-xs" th:href="@{'form/locales/'+${local.idLocal}}" th:text="'editar'"></a>
+                        </td>
+                        <td sec:authorize="hasRole('ROLE_ADMIN')">
+                            <a class="btn btn-danger btn-xs"
+                               th:href="@{'locales/eliminar/'+${local.idLocal}}"
+                               th:text="'eliminar'"
+                               onclick="return confirm('Estas seguro que quieres eliminar?');">
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <footer th:replace="layout/layout :: footer"></footer>
+</body>
+</html>

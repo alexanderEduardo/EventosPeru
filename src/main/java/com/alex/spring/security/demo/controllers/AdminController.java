@@ -14,6 +14,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -21,12 +22,19 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
@@ -34,7 +42,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@SessionAttributes(names = {"cliente","proveedor"})
+@SessionAttributes(names = {"cliente","proveedor","localDTO"})
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
@@ -459,5 +467,107 @@ public class AdminController {
         workbook.close();
     }
 
+
+    @GetMapping("/locales")
+    public String locales(Authentication authentication, Model model) {
+        if (authentication != null) {
+            logger.info("Hola usuario autenticado, tu username es: ".concat(authentication.getName()));
+        } else {
+            logger.info("authentication es null");
+        }
+        model.addAttribute("titulo", "Listado de locales");
+        model.addAttribute("locales", matrimonioService.getLocales());
+        return "admin/locales";
+    }
+    @GetMapping("/form/locales")
+    public String formLocalesView(Model model) {
+        LocalDTO localDTO = LocalDTO.builder()
+                .build();
+
+        model.addAttribute("localDTO", localDTO);
+        model.addAttribute("titulo", "Crear Local");
+        return "admin/form-local";
+    }
+    @PostMapping("/form/locales")
+    public String saveLocal(@Validated @ModelAttribute("localDTO") LocalDTO localDTO,
+                            BindingResult result,
+                            Model model,
+                            RedirectAttributes flash,SessionStatus status) throws IOException {
+
+        // Verificamos si hay errores de validación
+        if(localDTO.getImagen().getSize() == 0){
+            result.rejectValue("imagen",null,"Debes cargar una imagen");
+        }
+        if (result.hasErrors()) {
+            model.addAttribute("titulo", "Crear Local");
+            return "admin/form-local";
+        }
+
+        // Creamos un nuevo objeto Local
+        Local local = new Local();
+        local.setIdLocal(localDTO.getIdLocal());
+        local.setNombreLocal(localDTO.getNombreLocal());
+        local.setDireccion(localDTO.getDireccion());
+        local.setDescripcion(localDTO.getDescripcion());
+        local.setCapacidad(localDTO.getCapacidad());
+        local.setPrecioBase(localDTO.getPrecioBase());
+
+        // Procesamos la imagen si está presente
+        MultipartFile image = localDTO.getImagen();
+        if (image != null && !image.isEmpty()) {
+            String imagenNombre = image.getOriginalFilename();
+            File saveFile = new ClassPathResource("static/images/upload").getFile();
+
+            Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "locales" + File.separator
+                    + image.getOriginalFilename());
+
+            Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+            local.setImagen(imagenNombre);
+        }
+
+        // Guardamos el local en la base de datos
+        matrimonioService.saveLocal(local);
+        status.setComplete();
+        flash.addFlashAttribute("success", "Local guardado con éxito");
+        return "redirect:/admin/locales";
+    }
+
+    @RequestMapping(value = "/form/locales/{id}")
+    public String editarLocal(@PathVariable(value = "id") Integer id, Map<String, Object> model, RedirectAttributes flash) {
+        Optional<Local> localOptional = matrimonioService.findLocalById(id);
+        if(localOptional.isPresent()){
+            Local local = localOptional.get();
+            LocalDTO localDTO = LocalDTO.builder()
+                    .nombreLocal(local.getNombreLocal())
+                    .idLocal(local.getIdLocal())
+                    .capacidad(local.getCapacidad())
+                    .descripcion(local.getDescripcion())
+                    .precioBase(local.getPrecioBase())
+                    .direccion(local.getDireccion())
+                    .build();
+
+            model.put("localDTO",localDTO);
+            model.put("titulo", "Editar Cliente");
+        }
+        return "admin/form-local";
+    }
+
+    @RequestMapping("locales/eliminar/{id}")
+    public String eliminarLocal(@PathVariable Integer id, RedirectAttributes flash) {
+
+        try {
+            if (id > 0) {
+                matrimonioService.deleteLocalById(id);
+                flash.addFlashAttribute("success", "Local eliminado con éxito!");
+            } else {
+                flash.addFlashAttribute("error", "El id no tiene formato valido");
+            }
+            return "redirect:/admin/locales";
+
+        } catch (Exception e) {
+            flash.addFlashAttribute("error", "Ocurrio un error inesperado al tratar de eliminar el local.");
+            return "redirect:/admin/locales";
+        }
+    }
 
 }

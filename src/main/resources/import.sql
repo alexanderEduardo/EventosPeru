@@ -62,6 +62,8 @@ INSERT INTO user_roles (role_id, user_id) VALUES (4, 8);
 INSERT INTO user_roles (role_id, user_id) VALUES (4, 9);
 INSERT INTO user_roles (role_id, user_id) VALUES (4, 10);
 INSERT INTO user_roles (role_id, user_id) VALUES (4, 11);
+INSERT INTO user_roles (role_id, user_id) VALUES (2, 12);
+INSERT INTO user_roles (role_id, user_id) VALUES (2, 13);
 
 
 
@@ -125,10 +127,11 @@ INSERT INTO Local_Servicios (id_local, id_servicio, id_proveedor, precio, detall
 
 --solicitudes
 INSERT INTO solicitudes (id_solicitud, id_cliente, id_local, cantidad_invitados, presupuesto_final, fecha_evento, fecha_creacion, fecha_actualizacion, correo, estado) VALUES (1, 2, 2, 214, 2532, '2024-05-26', '2024-10-05 07:45:01', '2024-10-05 07:45:01', 'harveyjennifer@garza.com', 'CERRADO');
-INSERT INTO solicitudes (id_solicitud, id_cliente, id_local, cantidad_invitados, presupuesto_final, fecha_evento, fecha_creacion, fecha_actualizacion, correo, estado) VALUES (2, 3, 7, 165, 9316, '2024-04-11', '2024-07-13 17:07:04', '2024-07-13 17:07:04', 'ricedanielle@hotmail.com', 'EN_PROCESO');
-INSERT INTO solicitudes (id_solicitud, id_cliente, id_local, cantidad_invitados, presupuesto_final, fecha_evento, fecha_creacion, fecha_actualizacion, correo, estado) VALUES (3, 4, 7, 55, 8429, '2024-08-02', '2024-11-07 00:38:20', '2024-11-07 00:38:20', 'jason81@rodriguez.com', 'EN_PROCESO');
+INSERT INTO solicitudes (id_solicitud, id_cliente, id_local, cantidad_invitados, presupuesto_final, fecha_evento, fecha_creacion, fecha_actualizacion, correo, estado) VALUES (2, 3, 7, 165, 9316, '2024-04-11', '2024-07-13 17:07:04', '2024-07-13 17:07:04', 'ricedanielle@hotmail.com', 'RECIBIDO');
+INSERT INTO solicitudes (id_solicitud, id_cliente, id_local, cantidad_invitados, presupuesto_final, fecha_evento, fecha_creacion, fecha_actualizacion, correo, estado) VALUES (3, 4, 7, 55, 8429, '2024-08-02', '2024-11-07 00:38:20', '2024-11-07 00:38:20', 'jason81@rodriguez.com', 'RECIBIDO');
 INSERT INTO solicitudes (id_solicitud, id_cliente, id_local, cantidad_invitados, presupuesto_final, fecha_evento, fecha_creacion, fecha_actualizacion, correo, estado) VALUES (4, 5, 2, 184, 7791, '2024-02-11', '2024-08-27 11:02:50', '2024-08-27 11:02:50', 'thardy@wright-anderson.com', 'ESPERANDO_RESPUESTA_DEL_CLIENTE');
 INSERT INTO solicitudes (id_solicitud, id_cliente, id_local, cantidad_invitados, presupuesto_final, fecha_evento, fecha_creacion, fecha_actualizacion, correo, estado) VALUES (6, 6, 5, 188, 7644, '2024-03-19', '2024-07-12 00:52:11', '2024-07-12 00:52:11', 'lindaproctor@hotmail.com', 'ESPERANDO_RESPUESTA_DEL_CLIENTE');
 INSERT INTO solicitudes (id_solicitud, id_cliente, id_local, cantidad_invitados, presupuesto_final, fecha_evento, fecha_creacion, fecha_actualizacion, correo, estado) VALUES (8, 7, 1, 269, 3815, '2024-06-23', '2024-10-18 16:41:58', '2024-10-18 16:41:58', 'lnelson@dickson.org', 'PRESUPUESTO_ENVIADO');
 INSERT INTO solicitudes (id_solicitud, id_cliente, id_local, cantidad_invitados, presupuesto_final, fecha_evento, fecha_creacion, fecha_actualizacion, correo, estado) VALUES (9, 8, 7, 85, 4299, '2024-01-13', '2024-06-19 05:43:44', '2024-06-19 05:43:44', 'aaronhuang@gmail.com', 'CERRADO');
 INSERT INTO solicitudes (id_solicitud, id_cliente, id_local, cantidad_invitados, presupuesto_final, fecha_evento, fecha_creacion, fecha_actualizacion, correo, estado) VALUES (10, 9, 8, 91, 9364, '2024-06-08', '2024-04-26 06:45:37', '2024-04-26 06:45:37', 'phillipsvincent@gmail.com', 'PRESUPUESTO_ENVIADO');
+INSERT INTO solicitudes (id_solicitud, id_cliente, id_local, cantidad_invitados, presupuesto_final, fecha_evento, fecha_creacion, fecha_actualizacion, correo, estado) VALUES (11, 1, 8, 75, 5000, '2024-12-08', '2024-06-26 08:45:37', '2024-04-26 08:45:37', 'alex@yopmail.com', 'PRESUPUESTO_ENVIADO');

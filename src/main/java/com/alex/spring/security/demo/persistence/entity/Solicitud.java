@@ -36,7 +36,7 @@ public class Solicitud {
     private Integer cantidadInvitados;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "ENUM('RECIBIDO', 'EN_PROCESO', 'PRESUPUESTO_ENVIADO', 'ESPERANDO_RESPUESTA_DEL_CLIENTE', 'CERRADO') DEFAULT 'RECIBIDO'")
+    @Column(columnDefinition = "ENUM('RECIBIDO', 'PRESUPUESTO_ENVIADO', 'ESPERANDO_RESPUESTA_DEL_CLIENTE', 'CERRADO', 'CANCELADO') DEFAULT 'RECIBIDO'")
     private EstadoSolicitud estado = EstadoSolicitud.RECIBIDO;
 
     @Column(name = "fecha_creacion", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
@@ -53,10 +53,9 @@ public class Solicitud {
     // Enum para el estado
     public enum EstadoSolicitud {
         RECIBIDO,
-        EN_PROCESO,
         PRESUPUESTO_ENVIADO,
         ESPERANDO_RESPUESTA_DEL_CLIENTE,
-        CERRADO
-
+        CERRADO,
+        CANCELADO
     }
 }

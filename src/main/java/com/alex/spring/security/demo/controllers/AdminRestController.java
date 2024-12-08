@@ -1,20 +1,22 @@
 package com.alex.spring.security.demo.controllers;
 
 import com.alex.spring.security.demo.controllers.dto.*;
-import com.alex.spring.security.demo.persistence.entity.Cliente;
-import com.alex.spring.security.demo.persistence.entity.Proveedor;
+import com.alex.spring.security.demo.persistence.entity.*;
 import com.alex.spring.security.demo.services.IUserService;
+import com.alex.spring.security.demo.services.MatrimonioService;
 import com.alex.spring.security.demo.services.UserDetailsServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController

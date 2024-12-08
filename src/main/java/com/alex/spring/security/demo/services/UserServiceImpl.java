@@ -36,12 +36,6 @@ public class UserServiceImpl implements IUserService{
     @Autowired
     EspecialidadRepository especialidadRepository;
 
-    @Transactional(readOnly = true)
-    @Override
-    public List<UserEntity> findAllUsers() {
-        return (List<UserEntity>) userRepository.findAll();
-    }
-
     @Override
     public List<Cliente> findAllClients() {
         return (List<Cliente>) clienteRepository.findAll();
@@ -55,19 +49,11 @@ public class UserServiceImpl implements IUserService{
 
     @Transactional
     @Override
-    public UserEntity saveUser(UserEntity userEntity) {
-        return userRepository.save(userEntity);
-    }
-
-    @Transactional
-    @Override
     public void createUserAndClient(UserEntity user, Cliente cliente) {
         UserEntity savedUser = userRepository.save(user);
         cliente.setUsuario(savedUser);
         clienteRepository.save(cliente);
     }
-
-
 
     @Transactional
     @Override
@@ -81,24 +67,6 @@ public class UserServiceImpl implements IUserService{
     @Override
     public List<RoleEntity> findRolesByRoleEnumList(List<RoleEnum> roleEnums) {
         return roleRepository.findRoleEntitiesByRoleEnumIn(roleEnums);
-    }
-
-    @Override
-    @Transactional
-    public List<UserEntity> saveAllUsers(List<UserEntity> users) {
-        Iterable<UserEntity> userEntities = userRepository.saveAll(users);
-        return (List<UserEntity>) userEntities;
-    }
-
-    @Override
-    @Transactional
-    public Cliente saveCliente(Cliente cliente) {
-        return clienteRepository.save(cliente);
-    }
-
-    @Override
-    public Proveedor saveProveedor(Proveedor proveedor) {
-        return proveedorRepository.save(proveedor);
     }
 
     @Override

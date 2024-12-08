@@ -41,7 +41,7 @@ public class SecurityConfig {
 
         return httpSecurity
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/auth/**", "/api/**", "/matrimonio/**")
+                        .ignoringRequestMatchers("/auth/**", "/api/**", "/matrimonio/**","/test/**","/cliente/**")
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/css/**", "/js/**", "/images/**","/login","/register","/public/**","/test/**","/auth/**").permitAll()
@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/**").hasRole("ADMIN")
                         .requestMatchers("/matrimonio/**").hasRole("CLIENTE")
+                        .requestMatchers("/cliente/**").hasRole("CLIENTE")
                         .anyRequest().denyAll()  // Cualquier otra solicitud debe estar autenticada
                 )
                 .exceptionHandling(exception->exception.authenticationEntryPoint(new CustomAuthenticationEntryPoint()))

@@ -1,3 +1,5 @@
+import {clearErrors,setErrorMessage} from './utils.js';
+
 // Función para obtener el JWT de la cookie
 function getCookie(name) {
     const value = `; ${document.cookie}`;
@@ -11,7 +13,7 @@ function toggleLoading(show) {
 }
 
 // Evento de envío del formulario
-document.getElementById('procesar-solicitud').addEventListener('submit', async (event) => {
+document.getElementById('procesar-solicitud').addEventListener('submit',  (event) => {
     event.preventDefault();
 
     toggleLoading(true);
@@ -49,39 +51,56 @@ document.getElementById('procesar-solicitud').addEventListener('submit', async (
         localId
     };
 
-    try {
         // Enviar la solicitud usando fetch
-        const response = await fetch('/matrimonio/procesar-solicitud-presupuesto', {
+        fetch('/matrimonio/procesar-solicitud-presupuesto', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${jwt}`
             },
             body: JSON.stringify(solicitudFormDTO)
+        }).then(response =>{
+            return response.json().then(data =>{
+                // Ocultar pantalla de carga al finalizar la solicitud
+                toggleLoading(false);
+                clearErrors();
+                if (response.ok) {
+                    // Cargar los datos en el modal
+                    document.getElementById('modalNombre').textContent = data.nombre;
+                    document.getElementById('modalCorreo').textContent = data.correo;
+                    document.getElementById('modalFechaEvento').textContent = data.fechaEvento;
+                    document.getElementById('modalPresupuesto').textContent = data.presupuestoEstimado;
+                    document.getElementById('modalMensajeInformativo').textContent = data.mensajeInformativo;
+
+                    // Mostrar el modal
+                    $('#resultadoSolicitudModal').modal('show');
+                }else if(response.status == 400){
+                    const errorType = data.errorType;
+
+                    Swal.fire({
+                        title: "Error al crear el presupuesto",
+                        text: data.message,
+                        icon: "error"
+                    });
+
+                    if(errorType == "VALIDATION_ERROR"){
+                        for (const [field, message] of Object.entries(data.errors)) {
+                            setErrorMessage(field, message);
+                        }
+                    }
+                } else {
+                    alert(`Error al enviar la solicitud: ${data.message || 'Error desconocido'}`);
+                }
+
+            });
+        }).catch(error => {
+            toggleLoading(false);
+            console.error('Error en la solicitud:', error);
+            Swal.fire({
+                title: "Error al crear el presupuesto",
+                text: "Verifica si tus datos son correctos",
+                icon: "error"
+            });
         });
-
-        // Ocultar pantalla de carga al finalizar la solicitud
-        toggleLoading(false);
-
-        if (response.ok) {
-            const data = await response.json();
-
-            // Cargar los datos en el modal
-            document.getElementById('modalNombre').textContent = data.nombre;
-            document.getElementById('modalCorreo').textContent = data.correo;
-            document.getElementById('modalFechaEvento').textContent = data.fechaEvento;
-            document.getElementById('modalPresupuesto').textContent = data.presupuestoEstimado;
-            document.getElementById('modalMensajeInformativo').textContent = data.mensajeInformativo;
-
-            // Mostrar el modal
-            $('#resultadoSolicitudModal').modal('show');
-        } else {
-            const errorData = await response.json();
-            alert(`Error al enviar la solicitud: ${errorData.message || 'Error desconocido'}`);
-        }
-    } catch (error) {
-        toggleLoading(false);
-        console.error('Error en la solicitud:', error);
-        alert("Error al crear la solicitud. Por favor, inténtalo de nuevo.");
-    }
 });
+

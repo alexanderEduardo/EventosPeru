@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout/layout :: head"></head>
+<body>
+<header th:replace="layout/layout :: header"></header>
+<div class="container my-4">
+    <h2 class="text-center">Proveedores</h2>
+    <table class="table table-striped table-bordered">
+        <thead class="thead-inverse">
+        <tr>
+            <th>id</th>
+            <th>nombre</th>
+            <th>email</th>
+            <th>especialidad</th>
+            <th>calificacion</th>
+            <th>habilitado</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="proveedor: ${proveedores}">
+            <td th:text="${proveedor.idProveedor}"></td>
+            <td th:text="${proveedor.usuario.username}"></td>
+            <td th:text="${proveedor.usuario.email}"></td>
+            <td th:text="${proveedor.especialidad.nombre}"></td>
+            <td th:text="${proveedor.calificacion}"></td>
+            <td th:text="${proveedor.usuario.isEnabled}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<footer th:replace="layout/layout :: footer"></footer>
+</body>
+</html>
