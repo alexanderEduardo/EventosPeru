@@ -2,7 +2,7 @@
 <configuration>
 
     <!-- Define la propiedad de la ruta -->
-    <property name="LOGS_DIR" value="W:/logs/eventos-peru"/>
+    <property name="LOGS_DIR" value="C:/logs/eventos-peru"/>
 
     <!-- Appender para guardar logs en un archivo -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
