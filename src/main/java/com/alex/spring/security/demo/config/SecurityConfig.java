@@ -41,10 +41,10 @@ public class SecurityConfig {
 
         return httpSecurity
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/auth/**", "/api/**", "/matrimonio/**","/test/**","/cliente/**")
+                        .ignoringRequestMatchers("/auth/**", "/api/**", "/matrimonio/**","/test/**","/cliente/**","/actuator/**")
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/css/**", "/js/**", "/images/**","/login","/register","/public/**","/test/**","/auth/**").permitAll()
+                        .requestMatchers("/", "/css/**", "/js/**", "/images/**","/login","/register","/public/**","/test/**","/auth/**","/actuator/**").permitAll()
                         .requestMatchers("/home").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/**").hasRole("ADMIN")
